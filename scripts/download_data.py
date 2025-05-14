@@ -20,16 +20,24 @@ def download_s3_directory(s3_client, bucket, s3_path, local_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Download data from S3 for a specific task.")
-    parser.add_argument("--task", required=True, help="Task name (e.g., lamp)")
+    parser.add_argument("--task", required=True, help="Task name (e.g., lamp, one_leg)")
+    parser.add_argument("--type", default="processed", choices=["processed", "raw"], help="Type of data to download (processed or raw). Default is 'processed'.")
     args = parser.parse_args()
 
-    # S3 bucket and base path
+    # S3 bucket
     bucket = "iai-robust-rearrangement"
-    base_path = f"data/processed/diffik/sim/{args.task}/teleop"
+    data_dir = os.getenv("DATA_DIR_PROCESSED", "./data") # Note: DATA_DIR_PROCESSED might need a more generic name if handling raw data too.
 
-    # Determine local directory for downloads
-    data_dir = os.getenv("DATA_DIR_PROCESSED", "./data")
-    local_dir = os.path.join(data_dir, "processed", "diffik", "sim", args.task, "teleop")
+    if args.type == "processed":
+        base_path = f"data/processed/diffik/sim/{args.task}/teleop"
+        local_dir = os.path.join(data_dir, "processed", "diffik", "sim", args.task, "teleop")
+    elif args.type == "raw":
+        base_path = f"data/raw/diffik/sim/{args.task}/rollout/"
+        local_dir = os.path.join(data_dir, "raw", "diffik", "sim", args.task, "rollout")
+    else:
+        # This case should not be reached due to 'choices' in argparse, but good for safety.
+        print(f"Error: Unknown data type '{args.type}'.")
+        return
 
     # Create S3 client without requiring credentials (for public buckets)
     s3_client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
