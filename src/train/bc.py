@@ -1,3 +1,5 @@
+from furniture_bench.envs.furniture_rl_sim_env import FurnitureRLSimEnv
+
 import os
 import random
 from collections import defaultdict
