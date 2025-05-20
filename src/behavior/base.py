@@ -71,7 +71,10 @@ class Actor(torch.nn.Module, PrintParamCountMixin, metaclass=PostInitCaller):
 
         actor_cfg = cfg.actor
         self.obs_horizon = actor_cfg.obs_horizon
-        self.action_dim = cfg.action_dim
+        if hasattr(cfg, "action_dim") and cfg.action_dim is not None:
+            self.action_dim = cfg.action_dim
+        else:
+            self.action_dim = cfg.base_policy.action_dim
         self.pred_horizon = actor_cfg.pred_horizon
         self.action_horizon = actor_cfg.action_horizon
         self.predict_past_actions = actor_cfg.predict_past_actions

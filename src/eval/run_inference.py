@@ -1,3 +1,6 @@
+import isaacgym
+from isaacgym import gymapi, gymtorch
+
 import argparse
 import torch
 import numpy as np
@@ -91,7 +94,12 @@ def main():
     if "model_state_dict" in checkpoint:
         actor.load_state_dict(checkpoint["model_state_dict"])
     else:
-        actor.load_state_dict(checkpoint)
+        # Remove 'config' key if present before loading state dict
+        state_dict = checkpoint.copy()
+        if "config" in state_dict:
+            state_dict = state_dict.copy()
+            state_dict.pop("config")
+        actor.load_state_dict(state_dict)
     
     actor.eval()
     actor.to(device)

@@ -48,6 +48,8 @@ task_parts = {
     "chair": 5,
     "drawer": 2,
     "mug_rack": 2,
+    "factory_peg_hole": 2,
+    "factory_nut_bolt": 2,
 }
 
 
