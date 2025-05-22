@@ -55,8 +55,8 @@ def main():
         base_path = f"data/processed/diffik/sim/{args.task}/teleop"
         local_dir = os.path.join(data_dir, "processed", "diffik", "sim", args.task, "teleop")
     elif args.type == "raw":
-        base_path = f"data/raw/diffik/sim/{args.task}/rollout/"
-        local_dir = os.path.join(data_dir, "raw", "diffik", "sim", args.task, "rollout")
+        base_path = f"data/raw/diffik/sim/{args.task}/"
+        local_dir = os.path.join(data_dir, "raw", "diffik", "sim", args.task)
     elif args.type == "checkpoints":
         if not args.checkpoint_type or not args.checkpoint_level:
             print(f"{RED}Error: --checkpoint_type and --checkpoint_level are required when --type is 'checkpoints'.{RESET}")
