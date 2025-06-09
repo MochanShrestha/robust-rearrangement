@@ -125,7 +125,7 @@ def generate_robot_state_graphs(robot_state_data, output_path, title=None):
     print(f"Robot state graphs saved to {output_path}")
 
 
-def visualize_episode_from_zarr(zarr_path: str, episode_idx: int = 0, output_dir: str = None):
+def visualize_episode_from_zarr(zarr_path: str, episode_idx: int = 0, output_dir: str = None, video_format: str = 'mp4'):
     """
     Generate a video visualization from a zarr file for a specific episode.
     
@@ -134,6 +134,7 @@ def visualize_episode_from_zarr(zarr_path: str, episode_idx: int = 0, output_dir
         episode_idx: Index of the episode to visualize
         output_dir: Optional output directory. If None, the video will be saved
                     in the same directory as the zarr file.
+        video_format: Format of the output video ('mp4' or 'webm').
     """
     # Open the zarr store
     print(f"Loading zarr data from {zarr_path}")
@@ -165,7 +166,7 @@ def visualize_episode_from_zarr(zarr_path: str, episode_idx: int = 0, output_dir
     os.makedirs(output_dir, exist_ok=True)
     
     # Create output filenames
-    output_filename = f"{zarr_name}_episode_{episode_idx}.mp4"
+    output_filename = f"{zarr_name}_episode_{episode_idx}.{video_format}"
     output_path = output_dir / output_filename
     
     # Create output path for robot state graphs
@@ -191,7 +192,12 @@ def visualize_episode_from_zarr(zarr_path: str, episode_idx: int = 0, output_dir
     max_h = max(h1, h2)
     
     # Create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    if video_format == 'mp4':
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    elif video_format == 'webm':
+        fourcc = cv2.VideoWriter_fourcc(*'VP90') # VP9 codec for WebM
+    else:
+        raise ValueError(f"Unsupported video format: {video_format}. Choose 'mp4' or 'webm'.")
     out = cv2.VideoWriter(str(output_path), fourcc, 10.0, (w1 + w2, max_h))
     
     # Process each frame for this episode
@@ -226,7 +232,7 @@ def visualize_episode_from_zarr(zarr_path: str, episode_idx: int = 0, output_dir
     return output_path, graph_path
 
 
-def visualize_episode_from_pickle(pickle_path: str, output_dir: str = None):
+def visualize_episode_from_pickle(pickle_path: str, output_dir: str = None, video_format: str = 'mp4'):
     """
     Generate a video visualization from a pickle file.
     
@@ -234,6 +240,7 @@ def visualize_episode_from_pickle(pickle_path: str, output_dir: str = None):
         pickle_path: Path to the pickle file
         output_dir: Optional output directory. If None, the video will be saved
                     in the same directory as the pickle file.
+        video_format: Format of the output video ('mp4' or 'webm').
     """
     # Load pickle data
     print(f"Loading data from {pickle_path}")
@@ -252,13 +259,13 @@ def visualize_episode_from_pickle(pickle_path: str, output_dir: str = None):
     
     if output_dir is None:
         # Default to same directory as pickle file
-        output_path = pickle_path.with_suffix('.mp4')
+        output_path = pickle_path.with_suffix(f'.{video_format}')
         graph_path = pickle_path.with_suffix('.robot_state.png')
     else:
         # Use specified directory with pickle filename
         output_dir = Path(output_dir)
         os.makedirs(output_dir, exist_ok=True)
-        output_path = output_dir / pickle_path.with_suffix('.mp4').name
+        output_path = output_dir / pickle_path.with_suffix(f'.{video_format}').name
         graph_path = output_dir / f"{pickle_name}.robot_state.png"
     
     print(f"Generating video at {output_path}")
@@ -290,7 +297,12 @@ def visualize_episode_from_pickle(pickle_path: str, output_dir: str = None):
     max_h = max(h1, h2)
     
     # Create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    if video_format == 'mp4':
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    elif video_format == 'webm':
+        fourcc = cv2.VideoWriter_fourcc(*'VP90') # VP9 codec for WebM
+    else:
+        raise ValueError(f"Unsupported video format: {video_format}. Choose 'mp4' or 'webm'.")
     out = cv2.VideoWriter(str(output_path), fourcc, 10.0, (w1 + w2, max_h))
     
     # Process each frame
@@ -325,7 +337,7 @@ def visualize_episode_from_pickle(pickle_path: str, output_dir: str = None):
     return output_path, graph_path
 
 
-def visualize_episode(file_path: str, episode_idx: int = None, output_dir: str = None):
+def visualize_episode(file_path: str, episode_idx: int = None, output_dir: str = None, video_format: str = 'mp4'):
     """
     Generate a video visualization and robot state graphs from a file (zarr or pickle).
     
@@ -334,6 +346,7 @@ def visualize_episode(file_path: str, episode_idx: int = None, output_dir: str =
         episode_idx: Index of the episode to visualize (only for zarr files)
         output_dir: Optional output directory for the video. If None, the video will
                     be saved in the same directory as the input file.
+        video_format: Format of the output video ('mp4' or 'webm').
                     
     Returns:
         Tuple of (video_path, graph_path) or just video_path if no robot state data
@@ -346,12 +359,12 @@ def visualize_episode(file_path: str, episode_idx: int = None, output_dir: str =
         if episode_idx is None:
             episode_idx = 0
             print(f"No episode index specified. Defaulting to episode {episode_idx}.")
-        return visualize_episode_from_zarr(file_path, episode_idx, output_dir)
+        return visualize_episode_from_zarr(file_path, episode_idx, output_dir, video_format)
     elif file_path.endswith('.pkl') or file_path.endswith('.pickle'):
         # It's a pickle file
         if episode_idx is not None:
             print("Warning: Episode index is ignored for pickle files as they contain a single episode.")
-        return visualize_episode_from_pickle(file_path, output_dir)
+        return visualize_episode_from_pickle(file_path, output_dir, video_format)
     else:
         raise ValueError(f"Unsupported file type: {file_path}. Must be a zarr directory or pickle file.")
 
@@ -377,9 +390,16 @@ if __name__ == "__main__":
         default=None,
         help="Directory to save the output files (default: same directory as input)"
     )
+    parser.add_argument(
+        "--video-format",
+        type=str,
+        default="mp4",
+        choices=['mp4', 'webm'],
+        help="Format for the output video (mp4 or webm, default: mp4)"
+    )
     
     args = parser.parse_args()
-    result = visualize_episode(args.file_path, args.episode, args.output_dir)
+    result = visualize_episode(args.file_path, args.episode, args.output_dir, args.video_format)
     
     # Print summary of output files
     if isinstance(result, tuple):
